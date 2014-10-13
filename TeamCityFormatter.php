@@ -1,17 +1,25 @@
 <?php
 
-use Behat\Behat\Event\FeatureEvent;
-use Behat\Behat\Event\ScenarioEvent;
-use Behat\Behat\Event\StepEvent;
-use Behat\Behat\Formatter\FormatterInterface;
-use Symfony\Component\Translation\Translator;
+use Behat\Behat\EventDispatcher\Event\AfterScenarioTested;
+use Behat\Behat\EventDispatcher\Event\AfterStepTested;
+use Behat\Behat\EventDispatcher\Event\BeforeFeatureTested;
+use Behat\Behat\EventDispatcher\Event\BeforeScenarioTested;
+use Behat\Behat\Output\Printer\ConsoleOutputPrinter;
+use Behat\Behat\Tester\Result\ExecutedStepResult;
+use Behat\Testwork\Output\Formatter;
+use Behat\Testwork\Output\Printer\OutputPrinter;
 
 /**
  * Class TeamCityFormatter
  * @package tests\features\formatter
  */
-class TeamCityFormatter implements FormatterInterface
+class TeamCityFormatter implements Formatter
 {
+    /**
+     * @var array
+     */
+    private $parameters;
+
     /**
      * Returns an array of event names this subscriber wants to listen to.
      *
@@ -34,119 +42,44 @@ class TeamCityFormatter implements FormatterInterface
      */
     public static function getSubscribedEvents()
     {
-        $events = array(
-            'afterStep',
-            'beforeStep',
-            'beforeFeature', 'afterFeature',
-            'beforeScenario', 'afterScenario',
-//            'beforeSuite', 'afterSuite',
-//            'beforeScenario',
-//            'beforeBackground', 'afterBackground',
-//            'beforeOutline', 'afterOutline',
-//            'beforeOutlineExample', 'afterOutlineExample',
+        return array(
+            'tester.feature_tested.before'=>'onBeforeFeatureTested',
+            'tester.feature_tested.after'=>'onAfterFeatureTested',
+            'tester.scenario_tested.before'=>'onBeforeScenarioTested',
+            'tester.scenario_tested.after'=>'onAfterScenarioTested',
+            'tester.step_tested.before'=>'onBeforeStepTested',
+            'tester.step_tested.after'=>'onAfterStepTested',
         );
-
-        return array_combine($events, $events);
     }
 
     /**
-     * @param StepEvent $event
-     */
-    public function beforeStep(StepEvent $event)
-    {
-        $this->printEvent('message', [
-            'text'=>$event->getStep()->getText()
-        ]);
-    }
-
-    /**
-     * @param StepEvent $event
-     */
-    public function afterStep(StepEvent $event)
-    {
-        $params = [
-            'name'=>$event->getStep()->getParent()->getTitle(),
-        ];
-        if($event->getResult() == StepEvent::FAILED) {
-            $this->printEvent('testFailed', $params);
-        } elseif ($event->getResult() == StepEvent::PENDING) {
-            $this->printEvent('testIgnored', $params);
-        } elseif ($event->getResult() == StepEvent::SKIPPED) {
-            $this->printEvent('testIgnored', $params);
-        } elseif ($event->getResult() == StepEvent::UNDEFINED) {
-            $this->printEvent('testFailed', $params);
-        }
-    }
-
-    /**
-     * @param FeatureEvent $event
-     */
-    public function beforeFeature(FeatureEvent $event)
-    {
-        $fileName = $event->getFeature()->getFile();
-        $this->printEvent("testSuiteStarted", [
-            "name"=>$event->getFeature()->getTitle(),
-            "locationHint"=>"file://$fileName",
-        ]);
-    }
-
-    /**
-     * @param FeatureEvent $event
-     */
-    public function afterFeature(FeatureEvent $event)
-    {
-        $fileName = $event->getFeature()->getFile();
-        $this->printEvent("testSuiteFinished", [
-            "name"=>$event->getFeature()->getTitle(),
-            "locationHint"=>"file://$fileName",
-        ]);
-    }
-
-    /**
-     * @param ScenarioEvent $event
-     */
-    public function beforeScenario(ScenarioEvent $event)
-    {
-        $fileName = $event->getScenario()->getFile();
-        $this->printEvent("testStarted", [
-            "name"=>$event->getScenario()->getTitle(),
-            "locationHint"=>"file://$fileName",
-            "captureStandardOutput"=>"true"
-        ]);
-    }
-
-    /**
-     * @param ScenarioEvent $event
-     */
-    public function afterScenario(ScenarioEvent $event)
-    {
-        $fileName = $event->getScenario()->getFile();
-        $this->printEvent("testFinished", [
-            "name"=>$event->getScenario()->getTitle(),
-            "locationHint"=>"file://$fileName",
-        ]);
-    }
-
-    /**
-     * Set formatter translator.
+     * Returns formatter name.
      *
-     * @param Translator $translator
+     * @return string
      */
-    public function setTranslator(Translator $translator)
+    public function getName()
     {
-        // ignore
+        return "teamcity";
     }
 
     /**
-     * Checks if current formatter has parameter.
+     * Returns formatter description.
      *
-     * @param string $name
-     *
-     * @return Boolean
+     * @return string
      */
-    public function hasParameter($name)
+    public function getDescription()
     {
-        return false;
+        return "Formatter for teamcity";
+    }
+
+    /**
+     * Returns formatter output printer.
+     *
+     * @return OutputPrinter
+     */
+    public function getOutputPrinter()
+    {
+        return new ConsoleOutputPrinter();
     }
 
     /**
@@ -157,11 +90,11 @@ class TeamCityFormatter implements FormatterInterface
      */
     public function setParameter($name, $value)
     {
-        // ignore
+        $this->parameters[$name] = $value;
     }
 
     /**
-     * Returns parameter value.
+     * Returns parameter name.
      *
      * @param string $name
      *
@@ -169,18 +102,55 @@ class TeamCityFormatter implements FormatterInterface
      */
     public function getParameter($name)
     {
-        return null;
+        return $this->parameters[$name];
+    }
+
+    public function onBeforeFeatureTested(BeforeFeatureTested $event)
+    {
+        $this->printEvent("testSuiteStarted", ['name'=>$event->getFeature()->getTitle()]);
+    }
+
+    public function onAfterFeatureTested(BeforeFeatureTested $event)
+    {
+        $this->printEvent("testSuiteFinished", ['name'=>$event->getFeature()->getTitle()]);
+    }
+
+    public function onBeforeScenarioTested(BeforeScenarioTested $event)
+    {
+        $this->printEvent("testStarted", ['name'=>$event->getScenario()->getTitle()]);
+    }
+
+    public function onAfterScenarioTested(AfterScenarioTested $event)
+    {
+        if(!$event->getTestResult()->isPassed()) {
+            $this->printEvent("testFailed", ['name'=>$event->getScenario()->getTitle()]);
+        }
+        $this->printEvent("testFinished", ['name'=>$event->getScenario()->getTitle()]);
+    }
+
+    public function onAfterStepTested(AfterStepTested $event)
+    {
+        $result = $event->getTestResult();
+
+        if($result instanceof ExecutedStepResult) {
+            $exception = $result->getException();
+            if($exception) {
+                $this->printEvent("testStdErr", ['name'=> $exception->getFile(), "out"=> $exception->getMessage()]);
+            }
+        }
+
+        $this->printEvent("testFinished", ['name'=>$event->getStep()->getText()]);
     }
 
     /**
      * @param $eventName
      * @param array $params
      */
-    public static function printEvent($eventName, $params = array())
+    public function printEvent($eventName, $params = array())
     {
-        self::printText("\n##teamcity[$eventName");
+        self::printText("##teamcity[$eventName");
         foreach ($params as $key => $value) {
-            self::printText(" $key='$value'");
+            self::printText(" $key='".str_replace("'", "\"", $value)."'");
         }
         self::printText("]\n");
     }
@@ -188,7 +158,7 @@ class TeamCityFormatter implements FormatterInterface
     /**
      * @param $text
      */
-    public static function printText($text)
+    public function printText($text)
     {
         file_put_contents('php://stderr', $text);
     }
