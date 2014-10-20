@@ -8,5 +8,8 @@ behat.xml:
 <pre>
 default:
   formatter:
-    name: TeamCityFormatter,pretty
+    name: teamcity
+  extensions:
+    Behat\TeamCity\TeamCityFormatterExtension:
+      name: teamcity
 </pre>

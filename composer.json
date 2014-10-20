@@ -1,0 +1,22 @@
+{
+    "name": "vaidasm/teamcity-behat",
+    "description": "Behat 3.x formatter for teamcity",
+    "authors": [
+        {
+            "name": "Vaidas Mikalauskas",
+            "email": "vaidas.mikalauskas@gmai.com"
+        }
+    ],
+    "require": {},
+    "require-dev": {
+        "behat/behat": "~3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Behat\\TeamCity\\": "src/"
+        }
+    },
+    "config": {
+        "bin-dir": "bin"
+    }
+}
