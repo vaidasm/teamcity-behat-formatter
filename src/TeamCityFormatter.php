@@ -3,6 +3,7 @@
 use Behat\Behat\EventDispatcher\Event\AfterScenarioTested;
 use Behat\Behat\EventDispatcher\Event\AfterStepTested;
 use Behat\Behat\EventDispatcher\Event\BeforeFeatureTested;
+use Behat\Behat\EventDispatcher\Event\AfterFeatureTested;
 use Behat\Behat\EventDispatcher\Event\BeforeScenarioTested;
 use Behat\Behat\Output\Printer\ConsoleOutputPrinter;
 use Behat\Behat\Tester\Result\ExecutedStepResult;
@@ -44,7 +45,6 @@ class TeamCityFormatter implements Formatter
             'tester.feature_tested.after'=>'onAfterFeatureTested',
             'tester.scenario_tested.before'=>'onBeforeScenarioTested',
             'tester.scenario_tested.after'=>'onAfterScenarioTested',
-            'tester.step_tested.before'=>'onBeforeStepTested',
             'tester.step_tested.after'=>'onAfterStepTested',
         ];
     }
@@ -111,9 +111,9 @@ class TeamCityFormatter implements Formatter
     }
 
     /**
-     * @param BeforeFeatureTested $event
+     * @param AfterFeatureTested $event
      */
-    public function onAfterFeatureTested(BeforeFeatureTested $event)
+    public function onAfterFeatureTested(AfterFeatureTested $event)
     {
         $this->printEvent("testSuiteFinished", ['name'=>$event->getFeature()->getTitle()]);
     }
