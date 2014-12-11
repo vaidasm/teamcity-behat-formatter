@@ -160,11 +160,13 @@ class TeamCityFormatter implements Formatter
      */
     public function printEvent($eventName, $params = [])
     {
-        $this->printText("##teamcity[$eventName");
+        $message = "##teamcity[$eventName";
         foreach ($params as $key => $value) {
-            $this->printText(" $key='".str_replace("'", "\"", $value)."'");
+            $message .= " $key='".str_replace("'", "\"", $value)."'";
         }
-        $this->printText("]\n");
+        $message .= "]\n";
+
+        $this->printText($message);
     }
 
     /**
