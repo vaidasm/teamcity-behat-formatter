@@ -40,13 +40,13 @@ class TeamCityFormatter implements Formatter
      */
     public static function getSubscribedEvents()
     {
-        return [
+        return array(
             'tester.feature_tested.before'=>'onBeforeFeatureTested',
             'tester.feature_tested.after'=>'onAfterFeatureTested',
             'tester.scenario_tested.before'=>'onBeforeScenarioTested',
             'tester.scenario_tested.after'=>'onAfterScenarioTested',
             'tester.step_tested.after'=>'onAfterStepTested',
-        ];
+        );
     }
 
     /**
@@ -107,7 +107,7 @@ class TeamCityFormatter implements Formatter
      */
     public function onBeforeFeatureTested(BeforeFeatureTested $event)
     {
-        $this->printEvent("testSuiteStarted", ['name'=>$event->getFeature()->getTitle()]);
+        $this->printEvent("testSuiteStarted", array('name'=>$event->getFeature()->getTitle()));
     }
 
     /**
@@ -115,7 +115,7 @@ class TeamCityFormatter implements Formatter
      */
     public function onAfterFeatureTested(AfterFeatureTested $event)
     {
-        $this->printEvent("testSuiteFinished", ['name'=>$event->getFeature()->getTitle()]);
+        $this->printEvent("testSuiteFinished", array('name'=>$event->getFeature()->getTitle()));
     }
 
     /**
@@ -123,7 +123,7 @@ class TeamCityFormatter implements Formatter
      */
     public function onBeforeScenarioTested(BeforeScenarioTested $event)
     {
-        $this->printEvent("testStarted", ['name'=>$event->getScenario()->getTitle()]);
+        $this->printEvent("testStarted", array('name'=>$event->getScenario()->getTitle()));
     }
 
     /**
@@ -132,9 +132,9 @@ class TeamCityFormatter implements Formatter
     public function onAfterScenarioTested(AfterScenarioTested $event)
     {
         if(!$event->getTestResult()->isPassed()) {
-            $this->printEvent("testFailed", ['name'=>$event->getScenario()->getTitle()]);
+            $this->printEvent("testFailed", array('name'=>$event->getScenario()->getTitle()));
         }
-        $this->printEvent("testFinished", ['name'=>$event->getScenario()->getTitle()]);
+        $this->printEvent("testFinished", array('name'=>$event->getScenario()->getTitle()));
     }
 
     /**
@@ -147,18 +147,18 @@ class TeamCityFormatter implements Formatter
         if($result instanceof ExecutedStepResult) {
             $exception = $result->getException();
             if($exception) {
-                $this->printEvent("testStdErr", ['name'=> $exception->getFile(), "out"=> $exception->getMessage()]);
+                $this->printEvent("testStdErr", array('name'=> $exception->getFile(), "out"=> $exception->getMessage()));
             }
         }
 
-        $this->printEvent("testStdOut", ['name'=>$event->getStep()->getText()]);
+        $this->printEvent("testStdOut", array('name'=>$event->getStep()->getText()));
     }
 
     /**
      * @param $eventName
      * @param array $params
      */
-    public function printEvent($eventName, $params = [])
+    public function printEvent($eventName, $params = array())
     {
         $this->printText("##teamcity[$eventName");
         foreach ($params as $key => $value) {
