@@ -174,6 +174,6 @@ class TeamCityFormatter implements Formatter
      */
     public function printText($text)
     {
-        file_put_contents('php://stderr', $text);
+        file_put_contents('php://stdout', $text);
     }
 }
